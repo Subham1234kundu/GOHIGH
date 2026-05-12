@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Navbar from '@/components/Navbar';
-import CTASection from '@/components/CTASection';
+ import CTASection from '@/components/CTASection';
 
 const AboutPage = () => {
   return (
