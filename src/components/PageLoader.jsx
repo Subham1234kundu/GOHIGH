@@ -3,28 +3,29 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
+import { media } from '@/lib/media';
 
 const PageLoader = () => {
   const loaderRef = useRef(null);
   const logoRef = useRef(null);
-  const progressRef = useRef(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      const frame = requestAnimationFrame(() => setLoading(false));
+      return () => cancelAnimationFrame(frame);
+    }
+
     const tl = gsap.timeline();
 
-    // Initial entrance
     tl.from(logoRef.current, {
-      y: 20,
+      y: 16,
       opacity: 0,
-      duration: 1,
+      scale: 0.94,
+      duration: 0.9,
       ease: 'power3.out'
-    })
-    .from(progressRef.current, {
-      width: 0,
-      duration: 1.5,
-      ease: 'power2.inOut'
-    }, "-=0.5");
+    });
 
     // Check for page load
     const handleLoad = () => {
@@ -62,50 +63,18 @@ const PageLoader = () => {
         fontFamily: 'var(--font-montserrat), sans-serif'
       }}
     >
-      <div style={{ position: 'relative', width: '300px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ position: 'relative', width: 'min(380px, calc(100vw - 40px))', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div ref={logoRef}>
           <Image
-            src="/Image/goHighLogo.png"
+            src={media("logo")}
             alt="goHigh Logo"
-            width={200}
-            height={50}
-            style={{ width: 'auto', height: '50px', objectFit: 'contain' }}
+            width={320}
+            height={80}
+            style={{ width: 'min(320px, calc(100vw - 64px))', height: 'auto', objectFit: 'contain' }}
             priority
+            unoptimized
           />
         </div>
-      </div>
-
-      {/* Minimal Progress Bar */}
-      <div style={{ 
-        width: '150px', 
-        height: '2px', 
-        background: '#f0f0f0', 
-        marginTop: '20px', 
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div 
-          ref={progressRef}
-          style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            height: '100%', 
-            background: '#00c8c8', 
-            width: '100%' 
-          }} 
-        />
-      </div>
-      
-      <div style={{ 
-        marginTop: '12px', 
-        fontSize: '10px', 
-        letterSpacing: '2px', 
-        textTransform: 'uppercase', 
-        color: '#999',
-        fontWeight: 600
-      }}>
-        Initializing Systems
       </div>
     </div>
   );

@@ -1,29 +1,31 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import Link from 'next/link';
+import { ensureGsap, reveal } from '@/lib/gsapReveal';
+import { media } from '@/lib/media';
 
 const CTASection = () => {
   const sectionRef = useRef(null);
   const contentRef = useRef(null);
 
   useEffect(() => {
+    const { gsap, ScrollTrigger } = ensureGsap();
     const ctx = gsap.context(() => {
-      gsap.from(contentRef.current.children, {
-        y: 30,
-        duration: 1,
-        stagger: 0.1,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top bottom', // Trigger as soon as it enters
-        }
+      reveal(contentRef.current?.children, {
+        trigger: sectionRef.current,
+        mode: 'line',
+        y: 36,
+        stagger: 0.12,
+        duration: 0.9,
+        start: 'top 90%',
       });
     }, sectionRef);
-    return () => ctx.revert();
+    const t = setTimeout(() => ScrollTrigger.refresh(), 250);
+    return () => {
+      clearTimeout(t);
+      ctx.revert();
+    };
   }, []);
 
   return (
@@ -52,18 +54,25 @@ const CTASection = () => {
         background: '#000'
       }}>
         <img 
-          src="/Image/GoHighFt.png" 
-          alt="CTA Background" 
+          src={media("footer")} 
+          alt="CTA Background"
+          loading="lazy"
+          decoding="async"
           style={{ 
             width: '100%', 
             height: '100%', 
             objectFit: 'cover',
-            filter: 'brightness(0.5)' 
           }} 
         />
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          pointerEvents: 'none',
+        }} />
       </div>
 
-      <div ref={contentRef} style={{ maxWidth: '800px', padding: '0 20px', position: 'relative', zIndex: 1 }}>
+      <div ref={contentRef} className="cta-content" style={{ maxWidth: '800px', padding: '0 20px', position: 'relative', zIndex: 1 }}>
         <h2 style={{
           fontSize: 'clamp(26px, 4vw, 36px)',
           fontWeight: 600,
@@ -87,7 +96,10 @@ const CTASection = () => {
           Share a few details and Gohigh’s team will recommend next steps tailored to your organization.
         </p>
 
-        <button style={{
+        <Link href="/contact" className="cta-button" style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           background: '#00ffff',
           color: '#1a2a3a',
           padding: '14px 32px',
@@ -101,6 +113,7 @@ const CTASection = () => {
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
           position: 'relative',
           boxShadow: '0 0 15px rgba(0,255,255,0.4)',
+          textDecoration: 'none',
         }}
         onMouseOver={(e) => {
           e.currentTarget.style.background = '#ffffff';
@@ -116,16 +129,33 @@ const CTASection = () => {
         }}
         >
           Book Strategy Call
-        </button>
+        </Link>
       </div>
 
       <style jsx>{`
         @media (max-width: 768px) {
+          section {
+            min-height: 380px !important;
+            padding: 64px 0 !important;
+          }
+          .cta-content {
+            padding: 0 20px !important;
+          }
           h2 {
-            font-size: 22px !important;
+            font-size: clamp(22px, 7vw, 30px) !important;
           }
           p {
             font-size: 14px !important;
+          }
+          .cta-button {
+            width: min(100%, 260px);
+            min-height: 48px;
+          }
+        }
+        @media (max-height: 520px) and (orientation: landscape) {
+          section {
+            min-height: 100svh !important;
+            padding: 48px 0 !important;
           }
         }
       `}</style>

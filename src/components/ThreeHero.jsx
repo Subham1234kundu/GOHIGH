@@ -39,6 +39,9 @@ const ThreeHero = () => {
   const totalScrollHeight = 5000;
 
   useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 767px)").matches;
+    const tablet = window.matchMedia("(max-width: 1024px)").matches;
+
     // Initial entrance animation
     gsap.from(heroContentRef.current, {
       y: 60,
@@ -64,20 +67,20 @@ const ThreeHero = () => {
     sceneRef.current = scene;
     scene.fog = new THREE.FogExp2(0xd8e8f0, 0.0012);
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
+    const camera = new THREE.PerspectiveCamera(mobile ? 58 : 50, window.innerWidth / window.innerHeight, 0.1, 2000);
     cameraRef.current = camera;
-    camera.position.set(0, 60, 300);
+    camera.position.set(0, 60, mobile ? 365 : tablet ? 330 : 300);
 
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
-      antialias: true,
+      antialias: !mobile,
       alpha: false
     });
     rendererRef.current = renderer;
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.25 : tablet ? 1.5 : 2));
     renderer.setClearColor(0xd8e8f0, 1); // Match fog color to prevent white flash
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = !mobile;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
@@ -545,9 +548,13 @@ const ThreeHero = () => {
     rafIdRef.current = requestAnimationFrame(animate);
 
     const handleResize = () => {
+      const portraitMobile = window.innerWidth <= 767;
       camera.aspect = window.innerWidth / window.innerHeight;
+      camera.fov = portraitMobile ? 58 : 50;
+      camera.position.z = portraitMobile ? 365 : window.innerWidth <= 1024 ? 330 : 300;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, portraitMobile ? 1.25 : window.innerWidth <= 1024 ? 1.5 : 2));
       composer.setSize(window.innerWidth, window.innerHeight);
       fxaaPass.material.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
     };
@@ -560,10 +567,14 @@ const ThreeHero = () => {
       targetScroll.current = Math.max(0, Math.min(1, progress));
     };
     window.addEventListener('scroll', handleScroll);
+    // Bridge for Locomotive smooth scroll (window.scrollY stays 0 under loco)
+    window.addEventListener('loco-scroll', handleScroll);
+    handleScroll();
 
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('loco-scroll', handleScroll);
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       renderer.dispose();
       composer.dispose();
@@ -582,7 +593,7 @@ const ThreeHero = () => {
 
   return (
     <section ref={containerRef} className="three-hero-section" style={{ height: totalScrollHeight, position: 'relative' }} id="hero">
-      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', background: '#d8e8f0' }}>
+      <div className="three-hero-viewport" style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', background: '#d8e8f0' }}>
         <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
 
         <div style={{
@@ -590,12 +601,12 @@ const ThreeHero = () => {
           pointerEvents: 'none', zIndex: 10, fontFamily: "var(--font-inter), sans-serif"
         }}>
 
-          <div ref={heroContentRef} style={{
+          <div ref={heroContentRef} className="three-hero-content" style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
             textAlign: 'center', transition: 'opacity 0.8s ease', opacity: 1,
             width: '100%', maxWidth: '1000px'
           }}>
-            <div style={{
+            <div className="three-hero-eyebrow" style={{
               fontSize: '18px', letterSpacing: '6px', textTransform: 'uppercase',
               marginBottom: '16px', fontWeight: 700, fontFamily: "var(--font-montserrat), sans-serif",
               background: 'linear-gradient(135deg, #1a2a3a 0%, #00ffff 100%)',
@@ -606,27 +617,27 @@ const ThreeHero = () => {
             }}>
               GOHIGH
             </div>
-            <h1 style={{
-              fontFamily: "var(--font-montserrat), sans-serif", fontSize: 'clamp(32px, 6vw, 68px)',
-              fontWeight: 600, color: '#1a2a3a', margin: 0, lineHeight: 1.1, textTransform: 'uppercase',
+            <h1 className="three-hero-title" style={{
+              fontFamily: "var(--font-montserrat), sans-serif", fontSize: 'clamp(28px, 5vw, 52px)',
+              fontWeight: 600, color: '#1a2a3a', margin: 0, lineHeight: 1.0, textTransform: 'uppercase',
               letterSpacing: '-1px'
             }}>
               Elevating Brands Through<br />
               <span style={{
-                background: 'linear-gradient(135deg, #00ffff, #3aabd4)',
+                background: 'linear-gradient(135deg, #00ffff,rgb(49, 141, 174))',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}>Scalable Digital</span> Systems
             </h1>
-            <p style={{
+            <p className="three-hero-intro" style={{
               marginTop: '16px', fontSize: '18px', fontWeight: 500, color: '#1a2a3a',
               fontFamily: "var(--font-montserrat), sans-serif", maxWidth: '750px', margin: '16px auto',
               lineHeight: '32px'
             }}>
               GoHigh helps businesses scale with AI automation, software development, DevOps, and intelligent digital solutions.
             </p>
-            <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div className="three-hero-actions" style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button
                 className="hero-btn-primary"
                 style={{
@@ -648,7 +659,7 @@ const ThreeHero = () => {
 
 
 
-          <div ref={bottomLeftRef} style={{
+          <div ref={bottomLeftRef} className="three-hero-bottom-left" style={{
             position: 'absolute', bottom: '24px', left: '40px', fontSize: '11px', color: '#3a5a6a80',
             transition: 'opacity 0.5s ease', opacity: 1, zIndex: 20
           }}>
@@ -659,7 +670,7 @@ const ThreeHero = () => {
             }}>↗</div>
             Read about our visions
           </div>
-          <div ref={bottomRightRef} style={{
+          <div ref={bottomRightRef} className="three-hero-bottom-right" style={{
             position: 'absolute', bottom: '24px', right: '40px', fontSize: '11px', color: '#3a5a6a60',
             transition: 'opacity 0.5s ease', opacity: 1, zIndex: 20
           }}>©2026</div>
@@ -683,7 +694,7 @@ const ThreeHero = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             opacity: 0
           }}>
-            <div ref={videoPortalInnerRef} style={{
+            <div ref={videoPortalInnerRef} className="three-hero-video-frame" style={{
               width: '20%',
               maxWidth: '1200px',
               aspectRatio: '16/9',
@@ -695,7 +706,7 @@ const ThreeHero = () => {
               boxShadow: '0 0 60px rgba(58,171,212,0.2)',
               transition: 'width 0.1s ease'
             }}>
-              <div style={{
+              <div className="three-hero-play" style={{
                 position: 'absolute', inset: 0,
                 background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(58,171,212,0.03) 3px, rgba(58,171,212,0.03) 4px)',
                 pointerEvents: 'none'

@@ -1,6 +1,6 @@
-import { Inter, Playfair_Display, Montserrat } from "next/font/google";
+import { Inter, Playfair_Display, Montserrat, Space_Grotesk } from "next/font/google";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import ConditionalFooter from "@/components/ConditionalFooter";
 import PageLoader from "@/components/PageLoader";
 import "./globals.css";
 
@@ -19,6 +19,12 @@ const montserrat = Montserrat({
   subsets: ["latin"],
 });
 
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata = {
   title: "GoHigh Engineering",
   description: "Engineering the unexpected with AI, DevOps, and Automation.",
@@ -28,14 +34,14 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} ${montserrat.variable} antialiased`}
+      className={`${inter.variable} ${playfair.variable} ${montserrat.variable} ${spaceGrotesk.variable} antialiased`}
       suppressHydrationWarning
     >
       <body className="antialiased" suppressHydrationWarning>
         <PageLoader />
         <Navbar />
         {children}
-        <Footer />
+        <ConditionalFooter />
       </body>
     </html>
   );

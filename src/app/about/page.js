@@ -1,112 +1,246 @@
 "use client";
 
-import React from 'react';
-import Navbar from '@/components/Navbar';
- import CTASection from '@/components/CTASection';
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import { ensureGsap } from "@/lib/gsapReveal";
+import { media } from "@/lib/media";
 
-const AboutPage = () => {
+const PRINCIPLES = [
+  {
+    number: "01",
+    title: "Scale by design",
+    text: "Architecture should create room for ambition. We make the decisions today that keep products fast, resilient, and adaptable tomorrow.",
+  },
+  {
+    number: "02",
+    title: "Clarity over theatre",
+    text: "No black boxes and no inflated complexity. Our partners see the work, the trade-offs, and the path forward at every stage.",
+  },
+  {
+    number: "03",
+    title: "Ownership, end to end",
+    text: "We think beyond delivery. From the first system map to production telemetry, we stay accountable for the outcome.",
+  },
+];
+
+export default function AboutPage() {
+  const rootRef = useRef(null);
+  const techImageRef = useRef(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const { gsap, ScrollTrigger } = ensureGsap();
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    const ctx = gsap.context(() => {
+      const heroItems = root.querySelectorAll("[data-about-hero]");
+      gsap.fromTo(
+        heroItems,
+        { autoAlpha: 0, y: 55 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 1,
+          stagger: 0.11,
+          ease: "power3.out",
+          delay: 0.15,
+        }
+      );
+
+      root.querySelectorAll("[data-about-reveal]").forEach((item) => {
+        gsap.fromTo(
+          item,
+          { autoAlpha: 0, y: 48 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.9,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: item,
+              start: "top 84%",
+              once: true,
+            },
+          }
+        );
+      });
+
+      if (techImageRef.current) {
+        gsap.fromTo(
+          techImageRef.current,
+          { scale: 1.12, yPercent: -4 },
+          {
+            scale: 1,
+            yPercent: 4,
+            ease: "none",
+            scrollTrigger: {
+              trigger: techImageRef.current.parentElement,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: 0.7,
+            },
+          }
+        );
+      }
+    }, root);
+
+    const refreshTimer = window.setTimeout(() => ScrollTrigger.refresh(), 200);
+    return () => {
+      window.clearTimeout(refreshTimer);
+      ctx.revert();
+    };
+  }, []);
+
   return (
-    <main style={{ background: '#ffffff', color: '#1a2a3a', minHeight: '100vh' }}>
-      <Navbar />
-      
-      {/* Hero Section */}
-      <section style={{ 
-        padding: '200px 20px 120px 20px', 
-        textAlign: 'center',
-        background: '#fafafa',
-        borderBottom: '1px solid #eeeeee'
-      }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h1 style={{ 
-            fontSize: 'clamp(40px, 8vw, 64px)', 
-            fontWeight: 400, 
-            lineHeight: 1.1, 
-            marginBottom: '32px',
-            textTransform: 'uppercase',
-            letterSpacing: '-1px',
-            color: '#1a2a3a'
-          }}>
-            Engineering <span style={{ color: '#00c8c8' }}>Quality</span> <br/> At The Highest Level
+    <main ref={rootRef} className="about-page">
+      <section className="about-hero">
+        <div className="about-hero-orb" aria-hidden="true">
+          <i />
+        </div>
+
+        <div className="about-hero-copy">
+          <h1 data-about-hero>
+            Built for the systems
+            <span>behind tomorrow.</span>
           </h1>
-          <p style={{ 
-            fontSize: 'clamp(18px, 2vw, 20px)', 
-            color: '#666', 
-            lineHeight: 1.6,
-            maxWidth: '700px',
-            margin: '0 auto'
-          }}>
-            Gohigh is a global engineering partner focused on solving the most complex challenges for modern organizations.
+          <p className="about-hero-intro" data-about-hero>
+            We partner with ambitious teams to turn complex ideas into dependable
+            digital products—engineered with precision and built to keep moving.
           </p>
         </div>
       </section>
 
-      {/* Image & Text Grid */}
-      <section style={{ padding: '120px 20px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '80px', alignItems: 'center' }}>
-          <div>
-            <h2 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px', color: '#00c8c8', marginBottom: '24px', fontWeight: 600 }}>
-              Our Approach
-            </h2>
-            <h3 style={{ fontSize: '32px', fontWeight: 400, marginBottom: '32px', lineHeight: 1.3 }}>
-              We build systems that are as robust as they are elegant.
-            </h3>
-            <p style={{ fontSize: '18px', color: '#666', lineHeight: 1.6, marginBottom: '24px' }}>
-              Our philosophy is rooted in technical excellence and absolute transparency. We don't just deliver software; we engineer competitive advantages.
+      <section className="about-manifesto">
+        <div className="about-section-label" data-about-reveal>
+          <span>01</span>
+          <p>What drives us</p>
+        </div>
+        <div className="about-manifesto-copy" data-about-reveal>
+          <p>
+            Technology should not just work.
+            <br />
+            It should <em>move a business forward.</em>
+          </p>
+          <div className="about-manifesto-note">
+            <span />
+            <p>
+              GoHigh brings senior engineering thinking, product instinct, and
+              disciplined execution into one focused team.
             </p>
-            <p style={{ fontSize: '18px', color: '#666', lineHeight: 1.6 }}>
-              By combining deep architectural expertise with rapid execution, we help our partners scale their impact without sacrificing stability.
-            </p>
-          </div>
-          <div style={{ position: 'relative' }}>
-            <img 
-              src="/Image/about_team.png" 
-              alt="Engineering Team" 
-              style={{ width: '100%', height: 'auto', borderRadius: '0', boxShadow: '20px 20px 0px #00c8c8' }} 
-            />
           </div>
         </div>
       </section>
 
-      {/* Full Width Image Section */}
-      <section style={{ width: '100%', height: '600px', position: 'relative', overflow: 'hidden' }}>
-        <img 
-          src="/Image/about_tech.png" 
-          alt="Technology" 
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+      <section className="about-story">
+        <div className="about-story-image" data-about-reveal>
+          <img
+            src={media("aboutTeam")}
+            alt="The GoHigh engineering team collaborating"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="about-story-stamp" aria-hidden="true">
+            <span>GO</span>
+            <span>HIGH</span>
+          </div>
+        </div>
+        <div className="about-story-copy" data-about-reveal>
+          <div className="about-section-label">
+            <span>02</span>
+            <p>How we think</p>
+          </div>
+          <h2>Small enough to care. Experienced enough to carry the weight.</h2>
+          <p>
+            Our team works close to the problem and closer to the people it affects.
+            That means fewer handoffs, faster decisions, and engineering that stays
+            connected to the real objective.
+          </p>
+          <p>
+            We do not separate strategy from delivery. The people shaping the system
+            are the people building it.
+          </p>
+        </div>
+      </section>
+
+      <section className="about-principles">
+        <div className="about-principles-head" data-about-reveal>
+          <div className="about-section-label">
+            <span>03</span>
+            <p>Our principles</p>
+          </div>
+          <h2>Standards that show up in the work.</h2>
+        </div>
+
+        <div className="about-principles-list">
+          {PRINCIPLES.map((principle) => (
+            <article key={principle.number} data-about-reveal>
+              <span>{principle.number}</span>
+              <h3>{principle.title}</h3>
+              <p>{principle.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="about-tech">
+        <img
+          ref={techImageRef}
+          src={media("aboutTech")}
+          alt="Technology infrastructure"
+          loading="lazy"
+          decoding="async"
         />
-        <div style={{ 
-          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', 
-          background: 'rgba(26, 42, 58, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' 
-        }}>
-          <div style={{ maxWidth: '800px', textAlign: 'center', color: '#ffffff', padding: '0 20px' }}>
-            <h4 style={{ fontSize: '40px', fontWeight: 400, lineHeight: 1.2 }}>
-              Driving Innovation Through <span style={{ color: '#00ffff' }}>Surgical</span> Execution.
-            </h4>
-          </div>
+        <div className="about-tech-overlay" />
+        <div className="about-tech-copy" data-about-reveal>
+          <span>Built with intent</span>
+          <h2>
+            Surgical execution.
+            <br />
+            <em>Measurable impact.</em>
+          </h2>
         </div>
       </section>
 
-      {/* Values Section */}
-      <section style={{ padding: '120px 20px', background: '#fafafa' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px' }}>
-            {[
-              { title: "Scale First", desc: "Every system is designed to handle tomorrow's growth from day one." },
-              { title: "Absolute Trust", desc: "We maintain 100% transparency through every stage of the project lifecycle." },
-              { title: "Local Presence", desc: "Operating from our hub in Kolkata with a global perspective." }
-            ].map((value, i) => (
-              <div key={i} style={{ padding: '40px', background: '#ffffff', border: '1px solid #eeeeee' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#1a2a3a', marginBottom: '16px' }}>{value.title}</h3>
-                <p style={{ color: '#666', lineHeight: 1.6 }}>{value.desc}</p>
-              </div>
-            ))}
-          </div>
+      <section className="about-contact">
+        <div className="about-contact-meta" data-about-reveal>
+          <span>Have a complex challenge?</span>
+          <span>We should talk.</span>
+        </div>
+        <div className="about-contact-row" data-about-reveal>
+          <h2>Let&apos;s build what&apos;s next.</h2>
+          <Link
+            href="/contact"
+            className="about-contact-cta"
+            aria-label="Start a project with GoHigh"
+          >
+            <svg
+              className="about-contact-cta-ring"
+              viewBox="0 0 200 200"
+              aria-hidden="true"
+            >
+              <defs>
+                <path
+                  id="about-contact-cta-path"
+                  d="M 100,100 m -78,0 a 78,78 0 1,1 156,0 a 78,78 0 1,1 -156,0"
+                />
+              </defs>
+              <text>
+                <textPath href="#about-contact-cta-path" startOffset="1%">
+                  START A PROJECT · LET&apos;S BUILD · START A PROJECT · LET&apos;S BUILD ·
+                </textPath>
+              </text>
+            </svg>
+            <span className="about-contact-cta-copy">
+              <small>Have an idea?</small>
+              <strong>Let&apos;s talk</strong>
+            </span>
+            <i aria-hidden="true">↗</i>
+          </Link>
         </div>
       </section>
-
-      <CTASection />
     </main>
   );
-};
-
-export default AboutPage;
+}

@@ -2,62 +2,99 @@
 
 import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { ensureGsap, revealTimeline } from '@/lib/gsapReveal';
+import { media } from '@/lib/media';
 
 const ProcessSection = () => {
   const sectionRef = useRef(null);
   const headingRef = useRef(null);
+  const labelRef = useRef(null);
+  const titleRef = useRef(null);
+  const subtitleRef = useRef(null);
   const cardsRef = useRef(null);
   const bentoRef = useRef(null);
 
   useEffect(() => {
+    const { gsap, ScrollTrigger } = ensureGsap();
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced) return;
+
     const ctx = gsap.context(() => {
-      // Heading animation
-      gsap.from(headingRef.current, {
-        y: 40,
-        duration: 0.8,
+      const lineEls = titleRef.current?.querySelectorAll('.title-line');
+      const cards = cardsRef.current?.querySelectorAll('.process-card');
+      const bentoItems = bentoRef.current?.querySelectorAll('.bento-item');
+
+      gsap.set([labelRef.current, subtitleRef.current], {
+        autoAlpha: 0,
+        y: 28,
+        force3D: true,
+      });
+      gsap.set(lineEls, { autoAlpha: 0, y: 56, force3D: true });
+      gsap.set(cards, { autoAlpha: 0, y: 48, scale: 0.96, force3D: true });
+      gsap.set(bentoItems, { autoAlpha: 0, y: 40, scale: 0.97, force3D: true });
+
+      const headerTl = revealTimeline(headingRef.current, { start: 'top 90%' });
+      headerTl
+        .to(labelRef.current, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.65,
+          ease: 'power3.out',
+        })
+        .to(
+          lineEls,
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.95,
+            stagger: 0.12,
+            ease: 'power3.out',
+          },
+          '-=0.3'
+        )
+        .to(
+          subtitleRef.current,
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.75,
+            ease: 'power3.out',
+          },
+          '-=0.45'
+        );
+
+      const cardsTl = revealTimeline(cardsRef.current, { start: 'top 90%' });
+      cardsTl.to(cards, {
+        autoAlpha: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.9,
+        stagger: { each: 0.12, from: 'start' },
         ease: 'power3.out',
-        scrollTrigger: {
-          trigger: headingRef.current,
-          start: 'top bottom',
-        },
       });
 
-      // Top Cards animation
-      const topCards = cardsRef.current?.querySelectorAll('.process-card');
-      if (topCards) {
-        gsap.from(topCards, {
-          y: 50,
-          duration: 0.8,
-          stagger: 0.1,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: cardsRef.current,
-            start: 'top bottom',
-          },
-        });
-      }
-
-      // Bento Grid animation
-      const bentoItems = bentoRef.current?.querySelectorAll('.bento-item');
-      if (bentoItems) {
-        gsap.from(bentoItems, {
-          y: 50,
-          duration: 0.8,
-          stagger: 0.1,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: bentoRef.current,
-            start: 'top bottom',
-          },
-        });
-      }
+      const bentoTl = revealTimeline(bentoRef.current, { start: 'top 90%' });
+      bentoTl.to(bentoItems, {
+        autoAlpha: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.95,
+        stagger: { each: 0.1, from: 'start' },
+        ease: 'power3.out',
+      });
     }, sectionRef);
 
-    return () => ctx.revert();
+    const refreshId = requestAnimationFrame(() => ScrollTrigger.refresh());
+    const refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 300);
+
+    return () => {
+      cancelAnimationFrame(refreshId);
+      clearTimeout(refreshTimer);
+      ctx.revert();
+    };
   }, []);
 
   return (
@@ -73,22 +110,37 @@ const ProcessSection = () => {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header Section */}
         <div ref={headingRef} style={{ marginBottom: '60px' }}>
-          <div style={{
-            fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase',
-            color: '#1a2a3a', marginBottom: '16px', fontWeight: 600,
-          }}>
+          <div
+            ref={labelRef}
+            style={{
+              fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase',
+              color: '#1a2a3a', marginBottom: '16px', fontWeight: 600,
+            }}
+          >
             Our Process
           </div>
-          <h2 style={{
-            fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 400,
-            color: '#1a2a3a', margin: '0 0 16px 0', lineHeight: 1.2,
-            letterSpacing: '-0.5px',
-          }}>
-            A Scalable Growth System <br/>Built For Modern Businesses
+          <h2
+            ref={titleRef}
+            style={{
+              fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 400,
+              color: '#1a2a3a', margin: '0 0 16px 0', lineHeight: 1.15,
+              letterSpacing: '-0.5px',
+            }}
+          >
+            <span className="title-line" style={{ display: 'block' }}>
+              A Scalable Growth System
+            </span>
+            <span className="title-line" style={{ display: 'block' }}>
+              Built For Modern Businesses
+            </span>
           </h2>
-          <div style={{
-            fontSize: '24px', fontWeight: 300, color: 'rgba(26,42,58,0.4)',
-          }}>
+          <div
+            ref={subtitleRef}
+            className="process-subtitle"
+            style={{
+              fontSize: '24px', fontWeight: 300, color: 'rgba(26,42,58,0.4)',
+            }}
+          >
             From Strategy And Automation To Execution And Scale
           </div>
         </div>
@@ -127,7 +179,7 @@ const ProcessSection = () => {
                 <path d="M12 16L28 16L20 28L12 16Z" stroke="#1a2a3a" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <div className="process-card-heading" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>Discover & Strategize</h3>
               <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '2px' }}>( 01 )</span>
             </div>
@@ -161,7 +213,7 @@ const ProcessSection = () => {
                 <rect x="14" y="12" width="12" height="16" rx="6" stroke="#374151" strokeWidth="2" />
               </svg>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <div className="process-card-heading" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#374151', margin: 0 }}>Build & Automate</h3>
               <span style={{ fontSize: '12px', fontWeight: 700, color: '#374151', letterSpacing: '2px' }}>( 02 )</span>
             </div>
@@ -198,7 +250,7 @@ const ProcessSection = () => {
                 <path d="M16 28L20 24L24 28" stroke="#1a2a3a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <div className="process-card-heading" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>Optimize & Scale</h3>
               <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '2px' }}>( 03 )</span>
             </div>
@@ -227,10 +279,12 @@ const ProcessSection = () => {
             padding: '40px 32px',
           }}>
             <Image 
-              src="/Image/GoHighFocous.png" 
+              src={media("focus")} 
               alt="AI-Powered Growth" 
               fill 
-              style={{ objectFit: 'cover', opacity: 0.8 }} 
+              sizes="(max-width: 1024px) 100vw, 33vw"
+              style={{ objectFit: 'cover', opacity: 0.8 }}
+              unoptimized
             />
             {/* Gradient Overlay */}
             <div style={{
@@ -275,10 +329,12 @@ const ProcessSection = () => {
               minHeight: '280px',
             }}>
               <Image 
-                src="/Image/GoHighwork.png" 
+                src={media("work")} 
                 alt="Work" 
                 fill 
-                style={{ objectFit: 'cover' }} 
+                sizes="(max-width: 1024px) 100vw, 33vw"
+                style={{ objectFit: 'cover' }}
+                unoptimized
               />
             </div>
             {/* Bottom Text Card */}
@@ -338,10 +394,12 @@ const ProcessSection = () => {
               padding: '32px',
             }}>
               <Image 
-                src="/Image/GoHighimage3.png" 
+                src={media("image3")} 
                 alt="Strategy" 
                 fill 
-                style={{ objectFit: 'cover', opacity: 0.6 }} 
+                sizes="(max-width: 1024px) 100vw, 33vw"
+                style={{ objectFit: 'cover', opacity: 0.6 }}
+                unoptimized
               />
               <div style={{
                 position: 'absolute', inset: 0,
@@ -365,10 +423,12 @@ const ProcessSection = () => {
             }}>
               <div style={{ position: 'absolute', top: 0, right: 0, left: 0, height: '60%' }}>
                 <Image 
-                  src="/Image/GoHighTab.png" 
+                  src={media("tab")} 
                   alt="Cloud" 
                   fill 
-                  style={{ objectFit: 'contain', padding: '20px' }} 
+                  sizes="(max-width: 1024px) 100vw, 33vw"
+                  style={{ objectFit: 'contain', padding: '20px' }}
+                  unoptimized
                 />
               </div>
               <div style={{ position: 'relative', zIndex: 1, marginTop: '100px' }}>
@@ -388,24 +448,57 @@ const ProcessSection = () => {
       <style jsx>{`
         @media (max-width: 1024px) {
           .process-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .process-card:last-child {
+            grid-column: 1 / -1;
           }
           .bento-grid {
             grid-template-columns: 1fr 1fr !important;
+          }
+          .bento-grid > .bento-item:last-child {
+            grid-column: 1 / -1;
+            min-height: 420px;
           }
         }
         @media (max-width: 768px) {
           section {
             padding: 60px 20px !important;
           }
-          .bento-grid {
+          .process-subtitle {
+            font-size: clamp(17px, 5vw, 21px) !important;
+            line-height: 1.4;
+          }
+          .process-grid {
             grid-template-columns: 1fr !important;
           }
+          .process-card:last-child {
+            grid-column: auto;
+          }
+          .process-card {
+            padding: 30px 24px !important;
+          }
+          .process-card-heading {
+            align-items: flex-start !important;
+            justify-content: space-between;
+            gap: 12px !important;
+          }
+          .bento-grid {
+            grid-template-columns: 1fr !important;
+            min-height: 0 !important;
+          }
           .bento-item {
-            min-height: 400px !important;
+            min-height: 320px !important;
+            padding: 28px 24px !important;
+          }
+          .bento-grid > .bento-item:last-child {
+            grid-column: auto;
           }
           .bento-col {
-            gap: 24px !important;
+            gap: 18px !important;
+          }
+          .bento-col .bento-item {
+            min-height: 280px !important;
           }
         }
       `}</style>
